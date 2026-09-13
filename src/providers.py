@@ -6,7 +6,8 @@ Hỗ trợ Native Tool Calling và chuyển đổi linh hoạt qua biến môi t
 import os
 import sys
 import json
-from typing import Dict, Any, List
+import re
+from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 
 if sys.stdout.encoding != 'utf-8':
@@ -22,7 +23,13 @@ class BaseLLMProvider:
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         raise NotImplementedError
 
-    def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "") -> Dict[str, Any]:
+    def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "",
+                            history: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+        """
+        Gọi LLM với Native Tool Calling.
+        history: danh sách các lượt Action/Observation trước đó (chuẩn OpenAI messages:
+                 assistant(tool_calls) + tool(tool_call_id, content)) để hỗ trợ ReAct đa bước.
+        """
         raise NotImplementedError
 
 
@@ -34,29 +41,60 @@ class MockOfflineProvider(BaseLLMProvider):
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         return f"[Mock Chatbot Response]: Xin chào! Tôi đã nhận được câu hỏi '{prompt}'. (Chế độ Chatbot không có Tool tra cứu dữ liệu thời gian thực)."
 
-    def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "") -> Dict[str, Any]:
+    def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "",
+                            history: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
         prompt_lower = prompt.lower()
-        
-        # Mô phỏng nhận diện intent gọi Tool
-        if "sv2026001" in prompt_lower and "đặt lịch" in prompt_lower:
+        history = history or []
+        called_tools = [m["tool_calls"][0]["function"]["name"] for m in history
+                        if m.get("role") == "assistant" and m.get("tool_calls")]
+        wants_booking = any(k in prompt_lower for k in ["đặt lịch", "đặt khám", "book"])
+
+        # Các vòng sau: đã có Observation -> mô phỏng ReAct đa bước hoặc kết thúc
+        if called_tools:
+            if wants_booking and "book_appointment" not in called_tools:
+                return {
+                    "type": "tool_call",
+                    "tool_name": "book_appointment",
+                    "arguments": {"patient_name": "Khách hàng Mock", "phone": "0900000000",
+                                  "doctor_id": "BS003", "datetime_str": "08:30 15/09/2026"},
+                    "thought": "[Mock] Đã có kết quả tra cứu bác sĩ, tiếp tục gọi book_appointment để đặt lịch."
+                }
             return {
-                "type": "tool_call",
-                "tool_name": "schedule_appointment",
-                "arguments": {"student_id": "SV2026001", "datetime_str": "14:00 15/09/2026", "advisor_name": "PGS.TS Nguyễn Văn A"},
-                "thought": "Người dùng yêu cầu đặt lịch hẹn tư vấn cho sinh viên SV2026001. Tôi sẽ gọi tool schedule_appointment."
+                "type": "text",
+                "content": "[Mock Agent Response]: Đã tổng hợp kết quả từ MCP Server và hoàn tất yêu cầu của bạn.",
+                "thought": "[Mock] Đã nhận đủ Observation từ Tool, tổng hợp câu trả lời cuối cùng."
             }
-        elif "sv2026001" in prompt_lower or "tra cứu" in prompt_lower:
+
+        # Vòng đầu tiên: nhận diện intent gọi Tool
+        doctor_id_match = re.search(r"\bbs\d{3}\b", prompt_lower)
+        if wants_booking and doctor_id_match:
             return {
                 "type": "tool_call",
-                "tool_name": "academic_query",
-                "arguments": {"student_id": "SV2026001"},
-                "thought": "Người dùng muốn tra cứu thông tin học vụ của sinh viên SV2026001. Tôi sẽ gọi tool academic_query."
+                "tool_name": "book_appointment",
+                "arguments": {"patient_name": "Khách hàng Mock", "phone": "0900000000",
+                              "doctor_id": doctor_id_match.group(0).upper(), "datetime_str": "08:00 15/09/2026"},
+                "thought": "[Mock] Người dùng yêu cầu đặt lịch và đã cung cấp mã bác sĩ. Gọi tool book_appointment."
+            }
+        elif any(k in prompt_lower for k in ["bác sĩ", "lịch", "khoa", "khám", "đặt"]):
+            if "vũ trụ" in prompt_lower:
+                specialty = "Vũ trụ"
+            elif "nhi" in prompt_lower:
+                specialty = "Nhi"
+            elif "da liễu" in prompt_lower:
+                specialty = "Da liễu"
+            else:
+                specialty = "Tim mạch"
+            return {
+                "type": "tool_call",
+                "tool_name": "doctor_schedule_query",
+                "arguments": {"specialty": specialty},
+                "thought": f"[Mock] Người dùng muốn thông tin bác sĩ/lịch khám. Gọi tool doctor_schedule_query cho khoa {specialty}."
             }
         else:
             return {
                 "type": "text",
-                "content": f"[Mock Agent Response]: Xin chào! Quy chế học vụ VinUni yêu cầu sinh viên tích lũy tối thiểu 120 tín chỉ và duy trì GPA trên 2.0 để tốt nghiệp.",
-                "thought": "Câu hỏi chung về quy chế học vụ, trả lời trực tiếp không cần gọi Tool."
+                "content": "[Mock Agent Response]: Vinmec làm việc 07:00 - 17:00 từ Thứ Hai đến Thứ Bảy, Cấp cứu 24/7.",
+                "thought": "[Mock] Câu hỏi chung về thông tin bệnh viện, trả lời trực tiếp không cần gọi Tool."
             }
 
 
@@ -78,10 +116,23 @@ class GeminiProvider(BaseLLMProvider):
         except Exception as e:
             return f"[Gemini Exception]: {str(e)}"
 
-    def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "") -> Dict[str, Any]:
+    def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "",
+                            history: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
         if not self.api_key or self.api_key == "your_gemini_api_key_here":
             print("ℹ️ [Gemini Provider]: Chưa tìm thấy GEMINI_API_KEY hợp lệ. Tự động chuyển sang Mock Offline.")
-            return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt)
+            return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt, history)
+
+        # Gemini: nối các Action/Observation trước đó vào prompt dưới dạng ngữ cảnh ReAct
+        if history:
+            ctx_lines = []
+            for m in history:
+                if m.get("role") == "assistant" and m.get("tool_calls"):
+                    fn = m["tool_calls"][0]["function"]
+                    ctx_lines.append(f"Action: {fn['name']}({fn['arguments']})")
+                elif m.get("role") == "tool":
+                    ctx_lines.append(f"Observation: {m.get('content')}")
+            prompt = (prompt + "\n\n[LỊCH SỬ REACT TRƯỚC ĐÓ]\n" + "\n".join(ctx_lines)
+                      + "\nDựa vào Observation ở trên, hãy gọi tool tiếp theo nếu còn thiếu dữ liệu, hoặc trả lời cuối cùng.")
         
         try:
             from google import genai
@@ -132,7 +183,7 @@ class GeminiProvider(BaseLLMProvider):
 
         except Exception as e:
             print(f"⚠️ [Gemini API Warning]: Không thể kết nối live API ({str(e)}). Tự động fallback về Mock.")
-            return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt)
+            return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt, history)
 
 
 class OpenAIProvider(BaseLLMProvider):
@@ -156,10 +207,11 @@ class OpenAIProvider(BaseLLMProvider):
         except Exception as e:
             return f"[OpenAI Exception]: {str(e)}"
 
-    def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "") -> Dict[str, Any]:
+    def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "",
+                            history: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
         if not self.api_key or self.api_key == "your_openai_api_key_here":
             print("ℹ️ [OpenAI Provider]: Chưa tìm thấy OPENAI_API_KEY hợp lệ. Tự động chuyển sang Mock Offline.")
-            return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt)
+            return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt, history)
 
         try:
             from openai import OpenAI
@@ -182,12 +234,16 @@ class OpenAIProvider(BaseLLMProvider):
             if system_prompt:
                 messages.append({"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": prompt})
+            # Nạp lịch sử Action/Observation của các vòng ReAct trước (hỗ trợ đa bước)
+            if history:
+                messages.extend(history)
 
             response = client.chat.completions.create(
                 model=self.model_name,
                 messages=messages,
                 tools=tools if tools else None,
-                tool_choice="auto" if tools else None
+                tool_choice="auto" if tools else None,
+                temperature=0.2
             )
 
             msg = response.choices[0].message
@@ -198,7 +254,9 @@ class OpenAIProvider(BaseLLMProvider):
                     "type": "tool_call",
                     "tool_name": call.function.name,
                     "arguments": args,
-                    "thought": f"OpenAI quyết định gọi công cụ '{call.function.name}' với tham số: {json.dumps(args, ensure_ascii=False)}"
+                    "tool_call_id": call.id,
+                    "thought": (msg.content.strip() + " | " if msg.content else "")
+                               + f"OpenAI quyết định gọi công cụ '{call.function.name}' với tham số: {json.dumps(args, ensure_ascii=False)}"
                 }
             else:
                 return {
@@ -208,7 +266,7 @@ class OpenAIProvider(BaseLLMProvider):
                 }
         except Exception as e:
             print(f"⚠️ [OpenAI API Warning]: Không thể kết nối live API ({str(e)}). Tự động fallback về Mock.")
-            return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt)
+            return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt, history)
 
 
 def get_llm_provider() -> BaseLLMProvider:

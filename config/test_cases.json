@@ -1,0 +1,37 @@
+[
+  {
+    "id": "TC01",
+    "type": "direct_query",
+    "question": "Chào bạn, Vinmec làm việc từ mấy giờ đến mấy giờ và quy trình khám bệnh gồm những bước nào?",
+    "expected_behavior": "Agent trả lời trực tiếp từ thông tin chung trong System Prompt (giờ làm việc, quy trình khám), không cần gọi bất kỳ Tool nào.",
+    "complexity": "Low"
+  },
+  {
+    "id": "TC02",
+    "type": "single_tool_query",
+    "question": "Cho tôi xem lịch làm việc và khung giờ còn trống của các bác sĩ khoa Tim mạch.",
+    "expected_behavior": "Agent nhận diện nhu cầu tra cứu, tự động phát sinh Tool Call 'doctor_schedule_query' với specialty='Tim mạch' và liệt kê bác sĩ + khung giờ trống từ Observation.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC03",
+    "type": "appointment_booking",
+    "question": "Tôi tên Nguyễn Vũ Huy, số điện thoại 0912345678, muốn đặt lịch khám với bác sĩ mã BS001 lúc 08:00 ngày 15/09/2026.",
+    "expected_behavior": "Agent tự động phát sinh Tool Call 'book_appointment' với đúng patient_name, phone, doctor_id='BS001', datetime_str='08:00 15/09/2026' và xác nhận mã đặt lịch.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC04",
+    "type": "multi_step_reasoning",
+    "question": "Con tôi cần khám khoa Nhi, hãy đặt giúp tôi lịch với bác sĩ khoa Nhi nào có khung giờ trống sớm nhất. Tôi tên Nguyễn Vũ Huy, số điện thoại 0912345678.",
+    "expected_behavior": "Agent thực hiện chuỗi suy luận ReAct đa bước: gọi 'doctor_schedule_query' (specialty='Nhi') để lấy doctor_id và khung giờ trống sớm nhất, sau đó gọi 'book_appointment' với doctor_id vừa tra cứu được, rồi tổng hợp xác nhận.",
+    "complexity": "High"
+  },
+  {
+    "id": "TC05",
+    "type": "edge_case_handling",
+    "question": "Tôi muốn xem lịch bác sĩ khoa Vũ trụ tại Vinmec.",
+    "expected_behavior": "Agent gọi 'doctor_schedule_query' nhận kết quả NOT_FOUND từ Tool và đưa ra phản hồi lịch sự, gợi ý các chuyên khoa hiện có, không bịa đặt dữ liệu.",
+    "complexity": "Medium"
+  }
+]
