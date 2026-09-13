@@ -132,6 +132,20 @@ Câu hỏi: *"Con tôi cần khám khoa Nhi, hãy đặt giúp tôi lịch với
 | TC04 | multi_step_reasoning | 3 | `doctor_schedule_query(Nhi)` → `book_appointment(BS003)` | SUCCESS → SUCCESS | ✅ Đa bước, tự chọn slot sớm nhất |
 | TC05 | edge_case_handling | 2 | `doctor_schedule_query(Vũ trụ)` | NOT_FOUND | ✅ Không bịa, gợi ý khoa hiện có |
 
+### 2.4. So sánh Chatbot Baseline (Cấp 2) vs ReAct Agent (Cấp 3) trên cùng câu hỏi
+
+Mode `python src/app.py --all` chạy **cả hai hệ thống** trên cùng `gpt-4o-mini` với cùng 5 câu hỏi (Chatbot dùng `CHATBOT_BASELINE_PROMPT`, không có tool; Agent dùng `REACT_AGENT_SYSTEM_PROMPT` + MCP tools). Kết quả đầy đủ lưu tại `docs/chatbot_vs_agent.json`.
+
+| TC | Chatbot Baseline (Cấp 2 — chỉ sinh text) | ReAct Agent (Cấp 3 — MCP tools) |
+| :---: | :--- | :--- |
+| TC01 | ✅ Trả lời được giờ làm việc & quy trình (kiến thức trong prompt) | ✅ Trả lời tương đương, **không gọi tool** (đúng quy tắc 2) |
+| TC02 | ❌ *"tôi không có quyền truy cập vào dữ liệu thời gian thực… liên hệ tổng đài"* | ✅ Gọi `doctor_schedule_query` → liệt kê 2 bác sĩ + 5 khung giờ trống |
+| TC03 | ❌ *"không có quyền truy cập dữ liệu thời gian thực để đặt lịch khám"* | ✅ Gọi `book_appointment` → mã đặt lịch `VM-BS001-5678` |
+| TC04 | ❌ *"khuyên bạn nên gọi tổng đài để được hỗ trợ đặt lịch"* | ✅ 2 bước `doctor_schedule_query` → `book_appointment`, tự chọn slot sớm nhất |
+| TC05 | ⚠️ *"gọi tổng đài… về lịch làm việc của bác sĩ **khoa Vũ trụ**"* — ngầm chấp nhận một chuyên khoa không tồn tại | ✅ Xác minh qua tool → `NOT_FOUND` → thông báo không có khoa này, gợi ý 3 khoa thật |
+
+**Nhận xét:** Với câu hỏi kiến thức chung (TC01) hai cấp tương đương. Nhưng với 4/5 câu hỏi cần dữ liệu thực hoặc hành động, Chatbot Cấp 2 chỉ có thể từ chối và đẩy khách sang tổng đài; ReAct Agent hoàn thành trọn vẹn yêu cầu và còn **chống hallucination tốt hơn** (TC05) nhờ Observation thực tế thay vì suy đoán. Đây chính là giá trị của Agentic Fit 16/20 ở Mục 1.
+
 ---
 
 ## 3. TỔNG KẾT KẾT QUẢ NGHIỆM THU & NỘP BÀI
@@ -151,6 +165,7 @@ Câu hỏi: *"Con tôi cần khám khoa Nhi, hãy đặt giúp tôi lịch với
 | 2.1 | `src/mcp_server.py` | `call_tool()` gọi `dispatch_tool_call` → parse JSON → đóng gói JSON-RPC 2.0 (`jsonrpc`, `server`, `tool`, `result`) |
 | 2.2 | `src/app.py`, `src/providers.py` | ReAct loop **đa bước**: nạp `history` (assistant tool_calls + tool observation) cho LLM ở vòng sau; trace ghi thêm `thought`, `mcp_server`, `tool_latency_ms`; xử lý `MAX_ITERATIONS_REACHED` |
 | 3.1 | `docs/trace_waterfall.json` | 10 sự kiện từ OpenAI API thật |
+| Bonus | `src/app.py`, `docs/chatbot_vs_agent.json` | `--all` chạy thêm Chatbot Baseline Cấp 2 trên cùng câu hỏi để so sánh trực tiếp với Agent (cờ `--no-baseline` để tắt); mode `--interactive` lưu trace riêng vào `docs/trace_interactive.json` để không ghi đè trace nộp bài |
 
 ---
 

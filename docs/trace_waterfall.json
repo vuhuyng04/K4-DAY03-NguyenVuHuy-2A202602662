@@ -5,7 +5,7 @@
     "action_type": "FINAL_ANSWER",
     "thought": "OpenAI phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
     "output": "Chào bạn! Bệnh viện Vinmec làm việc từ 07:00 đến 17:00 từ Thứ Hai đến Thứ Bảy. Cấp cứu hoạt động 24/7.\n\nQuy trình khám bệnh tại Vinmec gồm các bước sau:\n1. Đặt lịch hẹn.\n2. Đến quầy lễ tân xác nhận.\n3. Khám với bác sĩ.\n4. Thanh toán và nhận kết quả.\n\nNếu bạn cần thêm thông tin gì khác, hãy cho tôi biết nhé!",
-    "latency_ms": 2810.61
+    "latency_ms": 1485.32
   },
   {
     "step": 1,
@@ -44,16 +44,16 @@
         }
       ]
     },
-    "latency_ms": 883.61,
-    "tool_latency_ms": 0.05
+    "latency_ms": 939.9,
+    "tool_latency_ms": 0.07
   },
   {
     "step": 2,
     "query": "Cho tôi xem lịch làm việc và khung giờ còn trống của các bác sĩ khoa Tim mạch.",
     "action_type": "FINAL_ANSWER",
     "thought": "OpenAI phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
-    "output": "Dưới đây là lịch làm việc và khung giờ còn trống của các bác sĩ khoa Tim mạch:\n\n1. **PGS.TS Nguyễn Văn An**\n   - Phòng: P.201 - Tòa A\n   - Khung giờ còn trống:\n     - 08:00 15/09/2026\n     - 10:30 15/09/2026\n     - 14:00 16/09/2026\n\n2. **TS.BS Trần Thị Bình**\n   - Phòng: P.203 - Tòa A\n   - Khung giờ còn trống:\n     - 09:00 15/09/2026\n     - 15:30 15/09/2026\n\nNếu bạn cần đặt lịch khám với bác sĩ nào, hãy cho tôi biết!",
-    "latency_ms": 1769.68
+    "output": "Dưới đây là lịch làm việc và khung giờ còn trống của các bác sĩ khoa Tim mạch:\n\n1. **PGS.TS Nguyễn Văn An**\n   - Phòng: P.201 - Tòa A\n   - Khung giờ còn trống:\n     - 08:00 15/09/2026\n     - 10:30 15/09/2026\n     - 14:00 16/09/2026\n\n2. **TS.BS Trần Thị Bình**\n   - Phòng: P.203 - Tòa A\n   - Khung giờ còn trống:\n     - 09:00 15/09/2026\n     - 15:30 15/09/2026\n\nNếu bạn muốn đặt lịch khám với bác sĩ nào, hãy cho tôi biết!",
+    "latency_ms": 1940.87
   },
   {
     "step": 1,
@@ -81,8 +81,8 @@
       "slot_confirmed": true,
       "message": "Đặt lịch thành công cho bệnh nhân Nguyễn Vũ Huy (SĐT 0912345678) khám Tim mạch với PGS.TS Nguyễn Văn An lúc 08:00 15/09/2026 tại P.201 - Tòa A."
     },
-    "latency_ms": 1012.72,
-    "tool_latency_ms": 0.03
+    "latency_ms": 1062.28,
+    "tool_latency_ms": 0.06
   },
   {
     "step": 2,
@@ -90,7 +90,7 @@
     "action_type": "FINAL_ANSWER",
     "thought": "OpenAI phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
     "output": "Bạn đã đặt lịch khám thành công với bác sĩ PGS.TS Nguyễn Văn An chuyên khoa Tim mạch. Thông tin chi tiết như sau:\n\n- **Họ tên bệnh nhân:** Nguyễn Vũ Huy\n- **Số điện thoại:** 0912345678\n- **Thời gian khám:** 08:00 ngày 15/09/2026\n- **Phòng khám:** P.201 - Tòa A\n- **Mã đặt lịch:** VM-BS001-5678\n\nNếu bạn cần thêm thông tin gì, hãy cho tôi biết nhé!",
-    "latency_ms": 1435.76
+    "latency_ms": 1488.86
   },
   {
     "step": 1,
@@ -129,8 +129,8 @@
         }
       ]
     },
-    "latency_ms": 920.05,
-    "tool_latency_ms": 0.03
+    "latency_ms": 959.83,
+    "tool_latency_ms": 0.04
   },
   {
     "step": 2,
@@ -158,16 +158,16 @@
       "slot_confirmed": true,
       "message": "Đặt lịch thành công cho bệnh nhân Nguyễn Vũ Huy (SĐT 0912345678) khám Nhi với BS.CKII Lê Minh Châu lúc 08:30 15/09/2026 tại P.105 - Tòa B."
     },
-    "latency_ms": 1049.13,
-    "tool_latency_ms": 0.05
+    "latency_ms": 1278.22,
+    "tool_latency_ms": 0.04
   },
   {
     "step": 3,
     "query": "Con tôi cần khám khoa Nhi, hãy đặt giúp tôi lịch với bác sĩ khoa Nhi nào có khung giờ trống sớm nhất. Tôi tên Nguyễn Vũ Huy, số điện thoại 0912345678.",
     "action_type": "FINAL_ANSWER",
     "thought": "OpenAI phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
-    "output": "Tôi đã đặt lịch khám cho con bạn như sau:\n\n- **Bác sĩ**: BS.CKII Lê Minh Châu\n- **Chuyên khoa**: Nhi\n- **Thời gian**: 08:30 ngày 15/09/2026\n- **Phòng khám**: P.105 - Tòa B\n- **Mã đặt lịch**: VM-BS003-5678\n\nBạn vui lòng đến quầy lễ tân để xác nhận lịch khám. Nếu cần thêm thông tin gì, hãy cho tôi biết nhé!",
-    "latency_ms": 2197.45
+    "output": "Tôi đã đặt lịch khám cho con bạn như sau:\n\n- **Bác sĩ**: BS.CKII Lê Minh Châu\n- **Chuyên khoa**: Nhi\n- **Thời gian**: 08:30 ngày 15/09/2026\n- **Phòng khám**: P.105 - Tòa B\n- **Mã đặt lịch**: VM-BS003-5678\n\nNếu bạn cần thêm thông tin gì, hãy cho tôi biết nhé!",
+    "latency_ms": 1370.88
   },
   {
     "step": 1,
@@ -189,15 +189,15 @@
       ],
       "message": "Vinmec hiện không có chuyên khoa 'Vũ trụ' trong hệ thống đặt lịch."
     },
-    "latency_ms": 1015.09,
-    "tool_latency_ms": 0.05
+    "latency_ms": 1356.02,
+    "tool_latency_ms": 0.04
   },
   {
     "step": 2,
     "query": "Tôi muốn xem lịch bác sĩ khoa Vũ trụ tại Vinmec.",
     "action_type": "FINAL_ANSWER",
     "thought": "OpenAI phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
-    "output": "Xin lỗi, hiện tại Bệnh viện Vinmec không có chuyên khoa \"Vũ trụ\" trong hệ thống. Bạn có thể tham khảo các chuyên khoa khác như Tim mạch, Nhi, hoặc Da liễu. Nếu bạn cần thông tin về một chuyên khoa nào khác, hãy cho tôi biết!",
-    "latency_ms": 1133.43
+    "output": "Xin lỗi, hiện tại Vinmec không có chuyên khoa \"Vũ trụ\" trong hệ thống đặt lịch. Bạn có thể tham khảo các chuyên khoa khác như Tim mạch, Nhi, hoặc Da liễu. Nếu bạn cần thông tin về một chuyên khoa nào khác, hãy cho tôi biết!",
+    "latency_ms": 1116.64
   }
 ]

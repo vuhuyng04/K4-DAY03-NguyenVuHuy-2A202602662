@@ -44,22 +44,24 @@ def load_test_cases():
         return json.load(f)
 
 
-def save_waterfall_trace(trace_data: list):
-    """Ghi vết log Waterfall Trace Log ra file docs/trace_waterfall.json"""
+def save_waterfall_trace(trace_data: list, filename: str = "trace_waterfall.json", label: str = "Waterfall Trace"):
+    """Ghi vết log ra file docs/<filename> (mặc định docs/trace_waterfall.json cho test suite nộp bài)"""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     docs_dir = os.path.join(base_dir, "docs")
     os.makedirs(docs_dir, exist_ok=True)
-    trace_path = os.path.join(docs_dir, "trace_waterfall.json")
+    trace_path = os.path.join(docs_dir, filename)
     with open(trace_path, "w", encoding="utf-8") as f:
         json.dump(trace_data, f, ensure_ascii=False, indent=2)
-    print(f"📊 [OBSERVABILITY]: Đã lưu {len(trace_data)} sự kiện Waterfall Trace tại '{trace_path}'!")
+    print(f"📊 [OBSERVABILITY]: Đã lưu {len(trace_data)} sự kiện {label} tại '{trace_path}'!")
 
 
-def run_baseline_chatbot(user_query: str, provider):
-    """Chạy Chatbot gốc (Cấp 2) không có công cụ gọi Tool"""
-    print(f"\n💬 [CHATBOT BASELINE] Câu hỏi: {user_query}")
+def run_baseline_chatbot(user_query: str, provider) -> str:
+    """Chạy Chatbot gốc (Cấp 2) không có công cụ gọi Tool. Trả về câu trả lời để so sánh với Agent."""
+    print(f"\n💬 [CHATBOT BASELINE - CẤP 2] Câu hỏi: {user_query}")
+    start = time.time()
     response = provider.generate(user_query, system_prompt=CHATBOT_BASELINE_PROMPT)
-    print(f"🤖 Chatbot phản hồi:\n{response}")
+    print(f"🤖 Chatbot phản hồi ({round((time.time() - start) * 1000)} ms):\n{response}")
+    return response
 
 
 def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) -> list:
@@ -197,7 +199,9 @@ if __name__ == "__main__":
         print("   - Tra cứu lịch bác sĩ: 'Cho tôi xem lịch làm việc của các bác sĩ khoa Tim mạch'")
         print("   - Đặt lịch khám: 'Đặt lịch khám với bác sĩ BS001 lúc 08:00 15/09/2026, tôi tên Huy, SĐT 0912345678'")
         print("   - Đa bước: 'Tôi muốn khám Nhi cho con, đặt giúp bác sĩ nào rảnh sớm nhất, tên Huy, SĐT 0912345678'")
-        print("   - Gõ 'exit' hoặc 'quit' để kết thúc phiên trò chuyện.\n")
+        print("   - Gõ 'exit' hoặc 'quit' để kết thúc phiên trò chuyện.")
+        print("   (Trace của phiên chat được lưu riêng tại docs/trace_interactive.json, không ghi đè trace nộp bài.)\n")
+        session_traces = []
         while True:
             try:
                 user_input = input("👤 Khách hàng hỏi: ").strip()
@@ -205,16 +209,22 @@ if __name__ == "__main__":
                     print("👋 Tạm biệt! Kết thúc phiên trò chuyện.")
                     break
                 logs = run_react_agent(user_input, provider, mcp_server)
-                save_waterfall_trace(logs)
+                session_traces.extend(logs)
+                save_waterfall_trace(session_traces, filename="trace_interactive.json", label="Interactive Trace")
             except (KeyboardInterrupt, EOFError):
                 print("\n👋 Đã thoát phiên tương tác.")
                 break
     elif "--all" in sys.argv:
-        print("🚀 [TEST SUITE MODE] Kiểm tra 5 Test Cases:")
+        run_baseline = "--no-baseline" not in sys.argv
+        print("🚀 [TEST SUITE MODE] Kiểm tra 5 Test Cases"
+              + (" — so sánh Chatbot Cấp 2 vs ReAct Agent Cấp 3:" if run_baseline else ":"))
+        if run_baseline:
+            print("   (Thêm cờ --no-baseline để bỏ qua Chatbot Baseline, chỉ chạy Agent.)")
         completed_count = 0
         todo_count = 0
         all_traces = []
-        
+        comparisons = []
+
         for tc in tests:
             print(f"\n==================================================")
             print(f"🧪 [{tc['id']}] Loại test: {tc['type']} (Độ phức tạp: {tc['complexity']})")
@@ -226,14 +236,37 @@ if __name__ == "__main__":
                 print(f"   👉 Hãy mở file 'config/test_cases.json' để viết câu hỏi thực tế cho Test Case này!")
                 todo_count += 1
             else:
+                # Cấp 2: Chatbot Baseline (không tool) -> Cấp 3: ReAct Agent (MCP tools) trên cùng câu hỏi
+                chatbot_answer = run_baseline_chatbot(tc["question"], provider) if run_baseline else None
                 logs = run_react_agent(tc["question"], provider, mcp_server)
                 all_traces.extend(logs)
                 completed_count += 1
-                
+
+                tools_called = [e["tool_name"] for e in logs if e["action_type"] == "TOOL_EXECUTION"]
+                final = next((e["output"] for e in logs if e["action_type"] == "FINAL_ANSWER"), "")
+                comparisons.append({
+                    "id": tc["id"],
+                    "type": tc["type"],
+                    "question": tc["question"],
+                    "chatbot_baseline_level2": chatbot_answer,
+                    "react_agent_level3": {
+                        "react_steps": len(logs),
+                        "tools_called_via_mcp": tools_called,
+                        "final_answer": final
+                    }
+                })
+
         print(f"\n==================================================")
         print(f"📊 [KẾT QUẢ TEST SUITE]: Đã thực thi {completed_count}/{len(tests)} Test Cases | {todo_count} Test Cases đang chờ điền câu hỏi (TODO)")
         if all_traces:
             save_waterfall_trace(all_traces)
+        if comparisons:
+            save_waterfall_trace(comparisons, filename="chatbot_vs_agent.json", label="so sánh Chatbot vs Agent")
+            print("\n📋 [BẢNG SO SÁNH CHATBOT (CẤP 2) VS REACT AGENT (CẤP 3)]")
+            print(f"{'TC':<6}{'Loại':<24}{'Chatbot (Cấp 2)':<18}{'Agent gọi Tool qua MCP (Cấp 3)':<48}{'Vòng ReAct'}")
+            for c in comparisons:
+                tools = " -> ".join(c["react_agent_level3"]["tools_called_via_mcp"]) or "(không cần tool)"
+                print(f"{c['id']:<6}{c['type']:<24}{'không có tool':<18}{tools:<48}{c['react_agent_level3']['react_steps']}")
         print(f"💡 Để trò chuyện trực tiếp từng câu: Chạy 'python src/app.py --interactive'")
     else:
         # Chế độ mặc định khi chỉ gõ 'python src/app.py'

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "TC01",
+    "type": "direct_query",
+    "question": "Chào bạn, Vinmec làm việc từ mấy giờ đến mấy giờ và quy trình khám bệnh gồm những bước nào?",
+    "chatbot_baseline_level2": "Chào bạn! Vinmec làm việc từ 07:00 đến 17:00 từ Thứ Hai đến Thứ Bảy, và có dịch vụ cấp cứu 24/7.\n\nQuy trình khám bệnh tại Vinmec thường bao gồm các bước sau:\n\n1. **Đặt lịch khám**: Bạn có thể gọi điện hoặc đến trực tiếp để đặt lịch khám.\n2. **Tiếp nhận bệnh nhân**: Khi đến, bạn sẽ được tiếp nhận và đăng ký thông tin tại quầy lễ tân.\n3. **Khám lâm sàng**: Bạn sẽ được bác sĩ khám và tư vấn.\n4. **Xét nghiệm và chẩn đoán hình ảnh (nếu cần)**: Bác sĩ có thể chỉ định làm các xét nghiệm hoặc chẩn đoán hình ảnh để xác định chính xác bệnh lý.\n5. **Kết quả và điều trị**: Sau khi có kết quả, bác sĩ sẽ tư vấn phương pháp điều trị phù hợp.\n6. **Theo dõi và tái khám (nếu cần)**: Bác sĩ sẽ hẹn bạn tái khám hoặc theo dõi tình trạng sức khỏe.\n\nNếu bạn có thêm câu hỏi nào khác, hãy cho tôi biết nhé!",
+    "react_agent_level3": {
+      "react_steps": 1,
+      "tools_called_via_mcp": [],
+      "final_answer": "Chào bạn! Bệnh viện Vinmec làm việc từ 07:00 đến 17:00 từ Thứ Hai đến Thứ Bảy. Cấp cứu hoạt động 24/7.\n\nQuy trình khám bệnh tại Vinmec gồm các bước sau:\n1. Đặt lịch hẹn.\n2. Đến quầy lễ tân xác nhận.\n3. Khám với bác sĩ.\n4. Thanh toán và nhận kết quả.\n\nNếu bạn cần thêm thông tin gì khác, hãy cho tôi biết nhé!"
+    }
+  },
+  {
+    "id": "TC02",
+    "type": "single_tool_query",
+    "question": "Cho tôi xem lịch làm việc và khung giờ còn trống của các bác sĩ khoa Tim mạch.",
+    "chatbot_baseline_level2": "Xin lỗi, nhưng tôi không có quyền truy cập vào dữ liệu thời gian thực để cung cấp lịch làm việc cụ thể của các bác sĩ hoặc khung giờ còn trống. Bạn có thể liên hệ với tổng đài của Vinmec để biết thêm thông tin chi tiết và đặt lịch khám. Tổng đài luôn sẵn sàng hỗ trợ bạn.",
+    "react_agent_level3": {
+      "react_steps": 2,
+      "tools_called_via_mcp": [
+        "doctor_schedule_query"
+      ],
+      "final_answer": "Dưới đây là lịch làm việc và khung giờ còn trống của các bác sĩ khoa Tim mạch:\n\n1. **PGS.TS Nguyễn Văn An**\n   - Phòng: P.201 - Tòa A\n   - Khung giờ còn trống:\n     - 08:00 15/09/2026\n     - 10:30 15/09/2026\n     - 14:00 16/09/2026\n\n2. **TS.BS Trần Thị Bình**\n   - Phòng: P.203 - Tòa A\n   - Khung giờ còn trống:\n     - 09:00 15/09/2026\n     - 15:30 15/09/2026\n\nNếu bạn muốn đặt lịch khám với bác sĩ nào, hãy cho tôi biết!"
+    }
+  },
+  {
+    "id": "TC03",
+    "type": "appointment_booking",
+    "question": "Tôi tên Nguyễn Vũ Huy, số điện thoại 0912345678, muốn đặt lịch khám với bác sĩ mã BS001 lúc 08:00 ngày 15/09/2026.",
+    "chatbot_baseline_level2": "Xin chào anh Nguyễn Vũ Huy, rất vui được hỗ trợ anh. Tuy nhiên, tôi không có quyền truy cập dữ liệu thời gian thực để đặt lịch khám hoặc kiểm tra lịch của bác sĩ. Anh vui lòng gọi đến tổng đài của Vinmec theo số điện thoại để được hỗ trợ và đặt lịch khám với bác sĩ mà anh mong muốn. Cảm ơn anh!",
+    "react_agent_level3": {
+      "react_steps": 2,
+      "tools_called_via_mcp": [
+        "book_appointment"
+      ],
+      "final_answer": "Bạn đã đặt lịch khám thành công với bác sĩ PGS.TS Nguyễn Văn An chuyên khoa Tim mạch. Thông tin chi tiết như sau:\n\n- **Họ tên bệnh nhân:** Nguyễn Vũ Huy\n- **Số điện thoại:** 0912345678\n- **Thời gian khám:** 08:00 ngày 15/09/2026\n- **Phòng khám:** P.201 - Tòa A\n- **Mã đặt lịch:** VM-BS001-5678\n\nNếu bạn cần thêm thông tin gì, hãy cho tôi biết nhé!"
+    }
+  },
+  {
+    "id": "TC04",
+    "type": "multi_step_reasoning",
+    "question": "Con tôi cần khám khoa Nhi, hãy đặt giúp tôi lịch với bác sĩ khoa Nhi nào có khung giờ trống sớm nhất. Tôi tên Nguyễn Vũ Huy, số điện thoại 0912345678.",
+    "chatbot_baseline_level2": "Xin lỗi, tôi không có quyền truy cập dữ liệu thời gian thực để đặt lịch khám. Tôi khuyên bạn nên gọi tổng đài để được hỗ trợ đặt lịch khám cho con bạn. Tổng đài sẽ giúp bạn kiểm tra khung giờ trống và thực hiện việc đặt lịch. Cảm ơn bạn đã hiểu!",
+    "react_agent_level3": {
+      "react_steps": 3,
+      "tools_called_via_mcp": [
+        "doctor_schedule_query",
+        "book_appointment"
+      ],
+      "final_answer": "Tôi đã đặt lịch khám cho con bạn như sau:\n\n- **Bác sĩ**: BS.CKII Lê Minh Châu\n- **Chuyên khoa**: Nhi\n- **Thời gian**: 08:30 ngày 15/09/2026\n- **Phòng khám**: P.105 - Tòa B\n- **Mã đặt lịch**: VM-BS003-5678\n\nNếu bạn cần thêm thông tin gì, hãy cho tôi biết nhé!"
+    }
+  },
+  {
+    "id": "TC05",
+    "type": "edge_case_handling",
+    "question": "Tôi muốn xem lịch bác sĩ khoa Vũ trụ tại Vinmec.",
+    "chatbot_baseline_level2": "Xin lỗi, nhưng tôi không có quyền truy cập vào dữ liệu thời gian thực để xem lịch bác sĩ. Bạn có thể gọi tổng đài của Vinmec để được hỗ trợ về lịch làm việc của bác sĩ khoa Vũ trụ. Họ sẽ cung cấp thông tin mà bạn cần. Cảm ơn bạn đã hiểu!",
+    "react_agent_level3": {
+      "react_steps": 2,
+      "tools_called_via_mcp": [
+        "doctor_schedule_query"
+      ],
+      "final_answer": "Xin lỗi, hiện tại Vinmec không có chuyên khoa \"Vũ trụ\" trong hệ thống đặt lịch. Bạn có thể tham khảo các chuyên khoa khác như Tim mạch, Nhi, hoặc Da liễu. Nếu bạn cần thông tin về một chuyên khoa nào khác, hãy cho tôi biết!"
+    }
+  }
+]
